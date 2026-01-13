@@ -1,0 +1,54 @@
+{
+  "agent_name": "LinkedIn Profile Agent",
+  "agent_id": "6966a9221f8ceefab63133cd",
+  "agent_purpose": "parser",
+  "description": "LinkedIn profile enrichment agent using Apollo API to extract and enrich contact profile data from company domains",
+  "response_schema": {
+    "status": "string (success|error)",
+    "result": {
+      "extracted_items": [
+        {
+          "name": "string",
+          "value": "any",
+          "confidence": "number (0-1)"
+        }
+      ],
+      "total_count": "number",
+      "raw_text_processed": "boolean",
+      "parsing_notes": "string (optional)"
+    },
+    "metadata": {
+      "agent_name": "string",
+      "timestamp": "string (ISO)"
+    }
+  },
+  "example_response": {
+    "status": "success",
+    "result": {
+      "extracted_items": [
+        {
+          "name": "Title",
+          "value": "Document Title",
+          "confidence": 0.95
+        },
+        {
+          "name": "Date",
+          "value": "2025-01-15",
+          "confidence": 0.9
+        }
+      ],
+      "total_count": 2,
+      "raw_text_processed": true,
+      "parsing_notes": "Successfully extracted key fields"
+    },
+    "metadata": {
+      "agent_name": "LinkedIn Profile Agent",
+      "timestamp": "2025-01-15T10:30:00Z"
+    }
+  },
+  "is_actual_tested": false,
+  "test_timestamp": null,
+  "test_message_used": "Parse this sample text for testing",
+  "raw_test_response": "Please provide the contact details (such as name, email, LinkedIn URL, or company info) you would like parsed or enriched from LinkedIn. I need these details to perform the enrichment using the Apollo API.",
+  "test_error": "Response not valid JSON: Expecting value: line 1 column 1 (char 0)"
+}

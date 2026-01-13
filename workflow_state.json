@@ -1,0 +1,44 @@
+{
+  "workflow_created": true,
+  "agents": [
+    {
+      "name": "Company Research Agent",
+      "agent_id": "6966a90ae2fc11fb41b46494",
+      "type": "sub-agent",
+      "provider": "Perplexity",
+      "model": "sonar-pro",
+      "temperature": 0.2,
+      "top_p": 1,
+      "tools": [],
+      "status": "created"
+    },
+    {
+      "name": "LinkedIn Profile Agent",
+      "agent_id": "6966a9221f8ceefab63133cd",
+      "type": "sub-agent",
+      "provider": "OpenAI",
+      "model": "gpt-4.1",
+      "temperature": 0.2,
+      "top_p": 1,
+      "tools": ["apollo:APOLLO_PEOPLE_ENRICHMENT"],
+      "status": "created"
+    },
+    {
+      "name": "Account Enrichment Coordinator",
+      "agent_id": "6966a93ce2fc11fb41b46498",
+      "type": "manager",
+      "provider": "OpenAI",
+      "model": "gpt-4.1",
+      "temperature": 0.3,
+      "top_p": 1,
+      "managed_agents": [
+        "6966a90ae2fc11fb41b46494",
+        "6966a9221f8ceefab63133cd"
+      ],
+      "status": "created"
+    }
+  ],
+  "total_agents": 3,
+  "response_schemas_saved": 3,
+  "timestamp": "2026-01-13T00:00:00Z"
+}

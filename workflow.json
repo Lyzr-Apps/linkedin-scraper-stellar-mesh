@@ -1,0 +1,110 @@
+{
+  "workflow": {
+    "name": "Account Enrichment Workflow",
+    "description": "Orchestrates research and enrichment of account data using company research and LinkedIn profile enrichment",
+    "nodes": [
+      {
+        "id": "input_node",
+        "type": "Input",
+        "label": "Account Data Input",
+        "nodeCategory": "input",
+        "position": { "x": 100, "y": 200 }
+      },
+      {
+        "id": "account_enrichment_coordinator",
+        "type": "Agent",
+        "label": "Account Enrichment Coordinator",
+        "nodeCategory": "agent",
+        "agent_id": "6966a93ce2fc11fb41b46498",
+        "position": { "x": 400, "y": 200 }
+      },
+      {
+        "id": "company_research_agent",
+        "type": "Agent",
+        "label": "Company Research Agent",
+        "nodeCategory": "agent",
+        "agent_id": "6966a90ae2fc11fb41b46494",
+        "position": { "x": 700, "y": 100 }
+      },
+      {
+        "id": "linkedin_profile_agent",
+        "type": "Agent",
+        "label": "LinkedIn Profile Agent",
+        "nodeCategory": "agent",
+        "agent_id": "6966a9221f8ceefab63133cd",
+        "position": { "x": 700, "y": 300 }
+      },
+      {
+        "id": "output_node",
+        "type": "Output",
+        "label": "Enriched Account Data",
+        "nodeCategory": "end",
+        "position": { "x": 1000, "y": 200 }
+      }
+    ],
+    "edges": [
+      {
+        "source": "input_node",
+        "target": "account_enrichment_coordinator"
+      },
+      {
+        "source": "account_enrichment_coordinator",
+        "target": "company_research_agent"
+      },
+      {
+        "source": "account_enrichment_coordinator",
+        "target": "linkedin_profile_agent"
+      },
+      {
+        "source": "company_research_agent",
+        "target": "output_node"
+      },
+      {
+        "source": "linkedin_profile_agent",
+        "target": "output_node"
+      }
+    ]
+  },
+  "agents": {
+    "6966a93ce2fc11fb41b46498": {
+      "name": "Account Enrichment Coordinator",
+      "type": "manager",
+      "description": "Orchestrates research and enrichment workflow, routes account data to sub-agents, aggregates enriched records into comprehensive output",
+      "provider": "OpenAI",
+      "model": "gpt-4.1",
+      "temperature": 0.3,
+      "top_p": 1,
+      "managed_agents": [
+        "6966a90ae2fc11fb41b46494",
+        "6966a9221f8ceefab63133cd"
+      ]
+    },
+    "6966a90ae2fc11fb41b46494": {
+      "name": "Company Research Agent",
+      "type": "sub-agent",
+      "description": "Performs web research on each account to gather company information, industry, recent news, and business context",
+      "provider": "Perplexity",
+      "model": "sonar-pro",
+      "temperature": 0.2,
+      "top_p": 1,
+      "tools": []
+    },
+    "6966a9221f8ceefab63133cd": {
+      "name": "LinkedIn Profile Agent",
+      "type": "sub-agent",
+      "description": "Fetches LinkedIn profile data including job titles, company details, contact information using Apollo people enrichment",
+      "provider": "OpenAI",
+      "model": "gpt-4.1",
+      "temperature": 0.2,
+      "top_p": 1,
+      "tools": [
+        {
+          "tool_name": "apollo",
+          "tool_source": "composio",
+          "action_names": ["APOLLO_PEOPLE_ENRICHMENT"]
+        }
+      ]
+    }
+  },
+  "created_at": "2026-01-13T00:00:00Z"
+}

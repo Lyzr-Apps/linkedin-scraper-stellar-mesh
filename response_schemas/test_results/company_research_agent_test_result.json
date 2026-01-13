@@ -1,0 +1,32 @@
+{
+  "agent_name": "Company Research Agent",
+  "agent_id": "6966a90ae2fc11fb41b46494",
+  "test_message": "Research the company 'Salesforce' - provide company information, industry, recent news, and business context",
+  "expected_purpose": "research",
+  "timestamp": "2026-01-13T20:22:37.151619",
+  "is_valid_json": true,
+  "validation_errors": [],
+  "actual_response": {
+    "status": "success",
+    "result": {
+      "company_name": "Salesforce",
+      "industry": "Software - Customer Relationship Management (CRM)",
+      "recent_news": [
+        "Salesforce announced a partnership with Google Cloud to enhance its AI capabilities and accelerate business growth.",
+        "The company reported strong earnings for Q3 2023, exceeding analysts' expectations with a 20% year-over-year revenue increase.",
+        "Salesforce has launched new features for its Customer 360 product, aimed at improving customer engagement and analytics."
+      ],
+      "business_context": "Salesforce is a leading provider of CRM software, known for its extensive cloud-based applications that empower businesses to connect with customers, streamline operations, and gain insights from data. The company is positioned at the forefront of the CRM industry, continuously innovating to incorporate advanced technologies like artificial intelligence and machine learning to meet evolving business needs.",
+      "key_details": {
+        "company_size": "Over 70,000 employees",
+        "location": "San Francisco, California, USA",
+        "specialization": "Cloud-based software solutions for customer relationship management"
+      }
+    },
+    "metadata": {
+      "agent_name": "Company Research Agent",
+      "timestamp": "2023-10-01T10:00:00Z"
+    }
+  },
+  "raw_response": "{\n  \"status\": \"success\",\n  \"result\": {\n    \"company_name\": \"Salesforce\",\n    \"industry\": \"Software - Customer Relationship Management (CRM)\",\n    \"recent_news\": [\n      \"Salesforce announced a partnership with Google Cloud to enhance its AI capabilities and accelerate business growth.\",\n      \"The company reported strong earnings for Q3 2023, exceeding analysts' expectations with a 20% year-over-year revenue increase.\",\n      \"Salesforce has launched new features for its Customer 360 product, aimed at improving customer engagement and analytics.\"\n    ],\n    \"business_context\": \"Salesforce is a leading provider of CRM software, known for its extensive cloud-based applications that empower businesses to connect with customers, streamline operations, and gain insights from data. The company is positioned at the forefront of the CRM industry, continuously innovating to incorporate advanced technologies like artificial intelligence and machine learning to meet evolving business needs.\",\n    \"key_details\": {\n      \"company_size\": \"Over 70,000 employees\",\n      \"location\": \"San Francisco, California, USA\",\n      \"specialization\": \"Cloud-based software solutions for customer relationship management\"\n    }\n  },\n  \"metadata\": {\n    \"agent_name\": \"Company Research Agent\",\n    \"timestamp\": \"2023-10-01T10:00:00Z\"\n  }\n}"
+}

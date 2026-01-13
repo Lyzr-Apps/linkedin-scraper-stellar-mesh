@@ -1,0 +1,69 @@
+{
+  "agent_name": "Company Research Agent",
+  "agent_id": "6966a90ae2fc11fb41b46494",
+  "agent_purpose": "research",
+  "description": "Web research agent that provides comprehensive company information including industry classification, recent news, business context, and key organizational details",
+  "response_schema": {
+    "status": "string",
+    "result": {
+      "company_name": "string",
+      "industry": "string",
+      "recent_news": [
+        "string"
+      ],
+      "business_context": "string",
+      "key_details": {
+        "company_size": "string",
+        "location": "string",
+        "specialization": "string"
+      }
+    },
+    "metadata": {
+      "agent_name": "string",
+      "timestamp": "string"
+    }
+  },
+  "example_response": {
+    "status": "error",
+    "result": {
+      "company_name": "",
+      "industry": "",
+      "recent_news": [
+        ""
+      ],
+      "business_context": "",
+      "key_details": {
+        "company_size": "",
+        "location": "",
+        "specialization": ""
+      }
+    },
+    "metadata": {
+      "agent_name": "Company Research Agent",
+      "timestamp": "2023-10-03T12:00:00Z"
+    }
+  },
+  "is_actual_tested": true,
+  "test_timestamp": "2026-01-13T20:23:22.711225",
+  "test_message_used": "Research a sample topic for testing",
+  "actual_test_response": {
+    "status": "error",
+    "result": {
+      "company_name": "",
+      "industry": "",
+      "recent_news": [
+        ""
+      ],
+      "business_context": "",
+      "key_details": {
+        "company_size": "",
+        "location": "",
+        "specialization": ""
+      }
+    },
+    "metadata": {
+      "agent_name": "Company Research Agent",
+      "timestamp": "2023-10-03T12:00:00Z"
+    }
+  }
+}

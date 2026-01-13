@@ -1,0 +1,22 @@
+{
+  "agent_name": "LinkedIn Profile Agent",
+  "agent_id": "6966a9221f8ceefab63133cd",
+  "test_message": "Enrich profile data for company domain 'salesforce.com' using Apollo people enrichment",
+  "expected_purpose": "parser",
+  "timestamp": "2026-01-13T20:22:40.177947",
+  "is_valid_json": true,
+  "validation_errors": [],
+  "actual_response": {
+    "status": "error",
+    "result": {
+      "profiles": [],
+      "total_profiles": 0,
+      "enrichment_source": "Apollo API"
+    },
+    "metadata": {
+      "agent_name": "LinkedIn Profile Agent",
+      "timestamp": "2024-06-13T17:52:06Z"
+    }
+  },
+  "raw_response": "{\n  \"status\": \"error\",\n  \"result\": {\n    \"profiles\": [],\n    \"total_profiles\": 0,\n    \"enrichment_source\": \"Apollo API\"\n  },\n  \"metadata\": {\n    \"agent_name\": \"LinkedIn Profile Agent\",\n    \"timestamp\": \"2024-06-13T17:52:06Z\"\n  }\n}"
+}
