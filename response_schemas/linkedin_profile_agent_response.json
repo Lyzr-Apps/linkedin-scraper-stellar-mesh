@@ -1,54 +1,49 @@
 {
   "agent_name": "LinkedIn Profile Agent",
   "agent_id": "6966a9221f8ceefab63133cd",
-  "agent_purpose": "parser",
-  "description": "LinkedIn profile enrichment agent using Apollo API to extract and enrich contact profile data from company domains",
+  "agent_purpose": "custom",
+  "description": "Returns LinkedIn profile URL and job title for a given person name and company name",
   "response_schema": {
-    "status": "string (success|error)",
+    "status": "string",
     "result": {
-      "extracted_items": [
-        {
-          "name": "string",
-          "value": "any",
-          "confidence": "number (0-1)"
-        }
-      ],
-      "total_count": "number",
-      "raw_text_processed": "boolean",
-      "parsing_notes": "string (optional)"
+      "linkedin_url": "string",
+      "job_title": "string",
+      "person_name": "string",
+      "company_name": "string"
     },
     "metadata": {
       "agent_name": "string",
-      "timestamp": "string (ISO)"
+      "timestamp": "string"
     }
   },
   "example_response": {
     "status": "success",
     "result": {
-      "extracted_items": [
-        {
-          "name": "Title",
-          "value": "Document Title",
-          "confidence": 0.95
-        },
-        {
-          "name": "Date",
-          "value": "2025-01-15",
-          "confidence": 0.9
-        }
-      ],
-      "total_count": 2,
-      "raw_text_processed": true,
-      "parsing_notes": "Successfully extracted key fields"
+      "linkedin_url": "https://www.linkedin.com/in/marcbenioff/",
+      "job_title": "Chairman & CEO",
+      "person_name": "Marc Benioff",
+      "company_name": "Salesforce"
     },
     "metadata": {
       "agent_name": "LinkedIn Profile Agent",
-      "timestamp": "2025-01-15T10:30:00Z"
+      "timestamp": "2024-06-18T23:33:13Z"
     }
   },
-  "is_actual_tested": false,
-  "test_timestamp": null,
-  "test_message_used": "Parse this sample text for testing",
-  "raw_test_response": "Please provide the contact details (such as name, email, LinkedIn URL, or company info) you would like parsed or enriched from LinkedIn. I need these details to perform the enrichment using the Apollo API.",
-  "test_error": "Response not valid JSON: Expecting value: line 1 column 1 (char 0)"
+  "is_actual_tested": true,
+  "test_timestamp": "2026-01-13T20:31:56.421425",
+  "test_message_used": "Provide a sample response",
+  "actual_test_response": {
+    "status": "success",
+    "result": {
+      "linkedin_url": "https://www.linkedin.com/in/marcbenioff/",
+      "job_title": "Chairman & CEO",
+      "person_name": "Marc Benioff",
+      "company_name": "Salesforce"
+    },
+    "metadata": {
+      "agent_name": "LinkedIn Profile Agent",
+      "timestamp": "2024-06-18T23:33:13Z"
+    }
+  },
+  "test_passed": true
 }

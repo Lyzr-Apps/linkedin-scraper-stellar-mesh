@@ -1,616 +1,275 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Progress } from '@/components/ui/progress'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import {
-  Upload,
-  Loader2,
-  ChevronDown,
-  ChevronUp,
-  Download,
-  Trash2,
-  Building2,
-  User,
-  MapPin,
-  Briefcase,
-  Mail,
-  Globe,
-  Users,
-  TrendingUp,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  XCircle
-} from 'lucide-react'
+import { Loader2, Search, ExternalLink, Briefcase, User, Building2 } from 'lucide-react'
 import { callAIAgent } from '@/utils/aiAgent'
 import type { NormalizedAgentResponse } from '@/utils/aiAgent'
-import { cn } from '@/lib/utils'
 
-// Agent ID from workflow.json
-const ACCOUNT_ENRICHMENT_COORDINATOR_ID = "6966a93ce2fc11fb41b46498"
+// Agent ID from response schema
+const LINKEDIN_PROFILE_AGENT_ID = "6966a9221f8ceefab63133cd"
 
-// TypeScript interfaces based on ACTUAL test response structure
-interface CompanyInfo {
+// TypeScript interfaces from ACTUAL test response
+interface LinkedInResult {
+  linkedin_url: string
+  job_title: string
+  person_name: string
   company_name: string
-  industry: string
-  business_context: string
-  recent_news: string[]
 }
 
-interface ContactProfile {
-  name?: string
-  job_title?: string
-  linkedin_url?: string
-  email?: string
-  location?: string
-}
-
-interface EnrichedAccount {
-  account_id: string
-  company_info?: CompanyInfo
-  contact_profiles?: ContactProfile[]
-  enrichment_summary?: string
-  status?: 'enriched' | 'partial' | 'not_found'
-}
-
-interface EnrichmentResult {
-  enriched_accounts: EnrichedAccount[]
-  total_enriched: string | number
-  timestamp?: string
-}
-
-// Sub-components defined OUTSIDE Home() to prevent re-creation
-function HeaderBar() {
-  return (
-    <div className="border-b bg-white">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Account Enrichment</h1>
-              <p className="text-sm text-gray-500">LinkedIn & Company Research Platform</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <User className="h-8 w-8 text-gray-400 bg-gray-100 rounded-full p-1.5" />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function FileDropzone({ onFileSelect, disabled }: { onFileSelect: (file: File) => void; disabled: boolean }) {
-  const [isDragging, setIsDragging] = useState(false)
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    if (!disabled) setIsDragging(true)
-  }
-
-  const handleDragLeave = () => {
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    if (disabled) return
-
-    const file = e.dataTransfer.files[0]
-    if (file && file.name.endsWith('.csv')) {
-      onFileSelect(file)
-    }
-  }
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.name.endsWith('.csv')) {
-      onFileSelect(file)
-    }
-  }
-
-  return (
-    <div
-      className={cn(
-        "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
-        isDragging && !disabled ? "border-blue-500 bg-blue-50" : "border-gray-300",
-        disabled && "opacity-50 cursor-not-allowed"
-      )}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-      <p className="text-sm text-gray-600 mb-2">Drag and drop CSV file here, or</p>
-      <label>
-        <Button variant="outline" disabled={disabled} asChild>
-          <span>
-            Browse Files
-            <input
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={handleFileInput}
-              disabled={disabled}
-            />
-          </span>
-        </Button>
-      </label>
-      <p className="text-xs text-gray-500 mt-3">CSV files only (max 10MB)</p>
-    </div>
-  )
-}
-
-function StatusBadge({ status }: { status: 'enriched' | 'partial' | 'not_found' | 'processing' }) {
-  const variants = {
-    enriched: { color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle },
-    partial: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: AlertCircle },
-    not_found: { color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle },
-    processing: { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Loader2 }
-  }
-
-  const variant = variants[status]
-  const Icon = variant.icon
-
-  return (
-    <Badge variant="outline" className={cn("border", variant.color)}>
-      <Icon className={cn("h-3 w-3 mr-1", status === 'processing' && "animate-spin")} />
-      {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
-    </Badge>
-  )
-}
-
-function AccountRow({ account, index }: { account: EnrichedAccount; index: number }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-
-  const companyName = account.company_info?.company_name || account.account_id.split('.')[0] || 'Unknown'
-  const domain = account.account_id
-  const industry = account.company_info?.industry || '-'
-  const status = account.status || (account.company_info ? 'enriched' : 'partial')
-
-  return (
-    <>
-      <TableRow className="hover:bg-gray-50">
-        <TableCell className="font-medium">{index + 1}</TableCell>
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-gray-400" />
-            <span className="font-medium text-gray-900">{companyName}</span>
-          </div>
-        </TableCell>
-        <TableCell>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Globe className="h-3 w-3" />
-            {domain}
-          </div>
-        </TableCell>
-        <TableCell>
-          <span className="text-sm text-gray-600">{industry}</span>
-        </TableCell>
-        <TableCell>
-          <StatusBadge status={status} />
-        </TableCell>
-        <TableCell>
-          <span className="text-sm text-gray-600">
-            {account.contact_profiles?.length || 0} contacts
-          </span>
-        </TableCell>
-        <TableCell>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </Button>
-        </TableCell>
-      </TableRow>
-      {isExpanded && (
-        <TableRow>
-          <TableCell colSpan={7} className="bg-gray-50 p-6">
-            <div className="space-y-6">
-              {/* Company Information */}
-              {account.company_info && (
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    Company Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Company Name:</span>
-                      <p className="text-gray-900 font-medium mt-1">{account.company_info.company_name}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Industry:</span>
-                      <p className="text-gray-900 font-medium mt-1">{account.company_info.industry}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <span className="text-gray-500 text-sm">Business Context:</span>
-                    <p className="text-gray-700 mt-1 text-sm leading-relaxed">
-                      {account.company_info.business_context}
-                    </p>
-                  </div>
-
-                  {account.company_info.recent_news && account.company_info.recent_news.length > 0 && (
-                    <div className="mt-4">
-                      <span className="text-gray-500 text-sm flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
-                        Recent News:
-                      </span>
-                      <ul className="mt-2 space-y-2">
-                        {account.company_info.recent_news.map((news, i) => (
-                          <li key={i} className="text-sm text-gray-700 flex gap-2">
-                            <span className="text-blue-600">•</span>
-                            <span>{news}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Contact Profiles */}
-              {account.contact_profiles && account.contact_profiles.length > 0 && (
-                <div>
-                  <Separator className="my-4" />
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Contact Profiles ({account.contact_profiles.length})
-                  </h4>
-                  <div className="grid gap-3">
-                    {account.contact_profiles.map((contact, i) => (
-                      <div key={i} className="border rounded-lg p-4 bg-white">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          {contact.name && (
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-900 font-medium">{contact.name}</span>
-                            </div>
-                          )}
-                          {contact.job_title && (
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-600">{contact.job_title}</span>
-                            </div>
-                          )}
-                          {contact.email && (
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-600">{contact.email}</span>
-                            </div>
-                          )}
-                          {contact.location && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-600">{contact.location}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Enrichment Summary */}
-              {account.enrichment_summary && (
-                <div>
-                  <Separator className="my-4" />
-                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Enrichment Summary
-                  </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {account.enrichment_summary}
-                  </p>
-                </div>
-              )}
-            </div>
-          </TableCell>
-        </TableRow>
-      )}
-    </>
-  )
+interface LinkedInResponse extends NormalizedAgentResponse {
+  result: LinkedInResult
 }
 
 export default function Home() {
-  const [manualInput, setManualInput] = useState('')
-  const [csvFileName, setCsvFileName] = useState<string | null>(null)
+  const [personName, setPersonName] = useState('')
+  const [companyName, setCompanyName] = useState('')
   const [loading, setLoading] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [enrichedAccounts, setEnrichedAccounts] = useState<EnrichedAccount[]>([])
+  const [response, setResponse] = useState<LinkedInResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleFileSelect = useCallback((file: File) => {
-    setCsvFileName(file.name)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const text = e.target?.result as string
-      const lines = text.split('\n').slice(1).filter(line => line.trim())
-      const accounts = lines.map(line => {
-        const [name, domain] = line.split(',').map(s => s.trim())
-        return domain ? `${name} (${domain})` : name
-      })
-      setManualInput(accounts.join('\n'))
-    }
-    reader.readAsText(file)
-  }, [])
-
-  const handleEnrichAccounts = async () => {
-    if (!manualInput.trim()) {
-      setError('Please provide account data to enrich')
+  const handleSearch = async () => {
+    if (!personName.trim() || !companyName.trim()) {
+      setError('Please enter both person name and company name')
       return
     }
 
     setLoading(true)
     setError(null)
-    setProgress(0)
+    setResponse(null)
 
     try {
-      const accounts = manualInput.split('\n').filter(line => line.trim())
-      const message = `Enrich accounts: ${accounts.join(', ')}`
-
-      setProgress(30)
-
-      const result = await callAIAgent(message, ACCOUNT_ENRICHMENT_COORDINATOR_ID)
-
-      setProgress(70)
+      const message = `Find LinkedIn profile for ${personName} at ${companyName}`
+      const result = await callAIAgent(message, LINKEDIN_PROFILE_AGENT_ID)
 
       if (result.success && result.response.status === 'success') {
-        const data = result.response.result as EnrichmentResult
-
-        if (data.enriched_accounts && Array.isArray(data.enriched_accounts)) {
-          setEnrichedAccounts(data.enriched_accounts)
-          setProgress(100)
-        } else {
-          setError('Unexpected response format from enrichment service')
-        }
+        setResponse(result.response as LinkedInResponse)
       } else {
-        setError(result.response.message || result.error || 'Failed to enrich accounts')
+        setError(result.response.message || result.error || 'Profile not found')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during enrichment')
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
-      setTimeout(() => setProgress(0), 1000)
     }
   }
 
-  const handleClearList = () => {
-    setManualInput('')
-    setCsvFileName(null)
-    setEnrichedAccounts([])
-    setError(null)
-    setProgress(0)
-  }
-
-  const handleExportCSV = () => {
-    if (enrichedAccounts.length === 0) return
-
-    const headers = ['Account Name', 'Domain', 'Industry', 'Business Context', 'Status', 'Contact Count']
-    const rows = enrichedAccounts.map(account => [
-      account.company_info?.company_name || account.account_id,
-      account.account_id,
-      account.company_info?.industry || '',
-      account.company_info?.business_context || '',
-      account.status || 'enriched',
-      account.contact_profiles?.length || 0
-    ])
-
-    const csv = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `enriched-accounts-${Date.now()}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const handleExportJSON = () => {
-    if (enrichedAccounts.length === 0) return
-
-    const json = JSON.stringify(enrichedAccounts, null, 2)
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `enriched-accounts-${Date.now()}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !loading) {
+      handleSearch()
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <HeaderBar />
-
-      <div className="container mx-auto px-6 py-8">
-        {/* Input Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>CSV Upload</CardTitle>
-              <CardDescription>Upload a CSV file with account names and domains</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FileDropzone onFileSelect={handleFileSelect} disabled={loading} />
-              {csvFileName && (
-                <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  {csvFileName}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Manual Entry</CardTitle>
-              <CardDescription>Enter one account per line (e.g., "Salesforce (salesforce.com)")</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Salesforce (salesforce.com)&#10;HubSpot (hubspot.com)&#10;Stripe (stripe.com)"
-                className="min-h-[180px] font-mono text-sm"
-                value={manualInput}
-                onChange={(e) => setManualInput(e.target.value)}
-                disabled={loading}
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                Format: Company Name (domain.com) or just domain.com
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Action Bar */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleEnrichAccounts}
-                  disabled={loading || !manualInput.trim()}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Enriching...
-                    </>
-                  ) : (
-                    <>
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Enrich Accounts
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleClearList}
-                  disabled={loading}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear List
-                </Button>
-              </div>
-
-              {enrichedAccounts.length > 0 && (
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={handleExportCSV}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export CSV
-                  </Button>
-                  <Button variant="outline" onClick={handleExportJSON}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export JSON
-                  </Button>
-                </div>
-              )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      {/* Header */}
+      <div className="border-b bg-white/80 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-3 rounded-xl shadow-lg shadow-blue-600/20">
+              <Search className="h-7 w-7 text-white" />
             </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">LinkedIn Profile Finder</h1>
+              <p className="text-slate-600 mt-1">Find LinkedIn profiles and job titles instantly</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            {progress > 0 && (
-              <div className="mt-4">
-                <Progress value={progress} className="h-2" />
-                <p className="text-sm text-gray-600 mt-2">Processing accounts... {progress}%</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800 flex items-center gap-2">
-                  <XCircle className="h-4 w-4" />
-                  {error}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Results Table */}
-        {enrichedAccounts.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Enriched Accounts ({enrichedAccounts.length})</CardTitle>
-              <CardDescription>
-                Click on a row to expand and view detailed information
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-12">
+        <div className="max-w-2xl mx-auto">
+          {/* Search Card */}
+          <Card className="shadow-xl border-slate-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl">Search Profile</CardTitle>
+              <CardDescription className="text-base">
+                Enter a person's name and their company to find their LinkedIn profile
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">#</TableHead>
-                      <TableHead>Account Name</TableHead>
-                      <TableHead>Domain</TableHead>
-                      <TableHead>Industry</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Contacts</TableHead>
-                      <TableHead className="w-12"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {enrichedAccounts.map((account, index) => (
-                      <AccountRow key={account.account_id} account={account} index={index} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Empty State */}
-        {enrichedAccounts.length === 0 && !loading && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Building2 className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Enriched Accounts Yet</h3>
-              <p className="text-gray-600 mb-6">
-                Upload a CSV file or enter account information manually to get started
-              </p>
-              <div className="flex justify-center gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Company Research</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>LinkedIn Profiles</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Industry Analysis</span>
+            <CardContent className="space-y-6">
+              {/* Person Name Input */}
+              <div className="space-y-2">
+                <Label htmlFor="person-name" className="text-base font-medium text-slate-700">
+                  Person Name
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Input
+                    id="person-name"
+                    type="text"
+                    placeholder="e.g., Marc Benioff"
+                    value={personName}
+                    onChange={(e) => setPersonName(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={loading}
+                    className="pl-11 h-12 text-base border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
                 </div>
               </div>
+
+              {/* Company Name Input */}
+              <div className="space-y-2">
+                <Label htmlFor="company-name" className="text-base font-medium text-slate-700">
+                  Company Name
+                </Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Input
+                    id="company-name"
+                    type="text"
+                    placeholder="e.g., Salesforce"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={loading}
+                    className="pl-11 h-12 text-base border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Search Button */}
+              <Button
+                onClick={handleSearch}
+                disabled={loading || !personName.trim() || !companyName.trim()}
+                className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-5 w-5 mr-2" />
+                    Find LinkedIn Profile
+                  </>
+                )}
+              </Button>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800 text-sm font-medium">{error}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
+
+          {/* Results Card */}
+          {response && response.result && (
+            <Card className="mt-6 shadow-xl border-slate-200 bg-gradient-to-br from-white to-slate-50">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl text-slate-900">Profile Found</CardTitle>
+                <CardDescription className="text-base">
+                  Here's the LinkedIn profile information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Person Info */}
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-slate-200">
+                    <div className="bg-blue-100 p-3 rounded-lg">
+                      <User className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-600 font-medium mb-1">Name</p>
+                      <p className="text-lg font-semibold text-slate-900">
+                        {response.result.person_name}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-slate-200">
+                    <div className="bg-green-100 p-3 rounded-lg">
+                      <Building2 className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-600 font-medium mb-1">Company</p>
+                      <p className="text-lg font-semibold text-slate-900">
+                        {response.result.company_name}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-slate-200">
+                    <div className="bg-purple-100 p-3 rounded-lg">
+                      <Briefcase className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-600 font-medium mb-1">Job Title</p>
+                      <p className="text-lg font-semibold text-slate-900">
+                        {response.result.job_title}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* LinkedIn URL */}
+                <div className="space-y-3">
+                  <p className="text-sm text-slate-600 font-medium">LinkedIn Profile</p>
+                  <a
+                    href={response.result.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg shadow-blue-600/20 group"
+                  >
+                    <span className="font-semibold">View Profile on LinkedIn</span>
+                    <ExternalLink className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </a>
+                  <p className="text-xs text-slate-500 break-all px-2">
+                    {response.result.linkedin_url}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Empty State - Instructions */}
+          {!response && !loading && !error && (
+            <Card className="mt-6 border-dashed border-2 border-slate-300 bg-slate-50/50">
+              <CardContent className="pt-8 pb-8 text-center">
+                <div className="bg-slate-200 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Search className="h-8 w-8 text-slate-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Ready to find LinkedIn profiles
+                </h3>
+                <p className="text-slate-600 mb-4 max-w-md mx-auto">
+                  Enter a person's name and company above, then click "Find LinkedIn Profile" to get started
+                </p>
+                <div className="flex flex-wrap justify-center gap-3 text-sm text-slate-500">
+                  <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200">
+                    <User className="h-4 w-4" />
+                    <span>Professional profiles</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200">
+                    <Briefcase className="h-4 w-4" />
+                    <span>Job titles</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200">
+                    <ExternalLink className="h-4 w-4" />
+                    <span>Direct LinkedIn links</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t bg-white/80 backdrop-blur-sm mt-12">
+        <div className="container mx-auto px-6 py-6">
+          <p className="text-center text-slate-600 text-sm">
+            Powered by AI Agent Technology
+          </p>
+        </div>
       </div>
     </div>
   )

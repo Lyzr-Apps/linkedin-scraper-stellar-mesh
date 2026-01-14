@@ -1,22 +1,23 @@
 {
   "agent_name": "LinkedIn Profile Agent",
   "agent_id": "6966a9221f8ceefab63133cd",
-  "test_message": "Enrich profile data for company domain 'salesforce.com' using Apollo people enrichment",
+  "test_message": "Find LinkedIn profile for Marc Benioff at Salesforce",
   "expected_purpose": "parser",
-  "timestamp": "2026-01-13T20:22:40.177947",
+  "timestamp": "2026-01-13T20:31:56.420708",
   "is_valid_json": true,
   "validation_errors": [],
   "actual_response": {
-    "status": "error",
+    "status": "success",
     "result": {
-      "profiles": [],
-      "total_profiles": 0,
-      "enrichment_source": "Apollo API"
+      "linkedin_url": "https://www.linkedin.com/in/marcbenioff/",
+      "job_title": "Chairman & CEO",
+      "person_name": "Marc Benioff",
+      "company_name": "Salesforce"
     },
     "metadata": {
       "agent_name": "LinkedIn Profile Agent",
-      "timestamp": "2024-06-13T17:52:06Z"
+      "timestamp": "2024-06-18T23:33:13Z"
     }
   },
-  "raw_response": "{\n  \"status\": \"error\",\n  \"result\": {\n    \"profiles\": [],\n    \"total_profiles\": 0,\n    \"enrichment_source\": \"Apollo API\"\n  },\n  \"metadata\": {\n    \"agent_name\": \"LinkedIn Profile Agent\",\n    \"timestamp\": \"2024-06-13T17:52:06Z\"\n  }\n}"
+  "raw_response": "{\n  \"status\": \"success\",\n  \"result\": {\n    \"linkedin_url\": \"https://www.linkedin.com/in/marcbenioff/\",\n    \"job_title\": \"Chairman & CEO\",\n    \"person_name\": \"Marc Benioff\",\n    \"company_name\": \"Salesforce\"\n  },\n  \"metadata\": {\n    \"agent_name\": \"LinkedIn Profile Agent\",\n    \"timestamp\": \"2024-06-18T23:33:13Z\"\n  }\n}"
 }
